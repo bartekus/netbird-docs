@@ -1,0 +1,88 @@
+import {Note} from "@/components/mdx";
+
+export const description = 'Connect Rauthy to NetBird self-hosted as a Generic OIDC identity provider.'
+
+# Rauthy with NetBird Self-Hosted
+
+[Rauthy](https://github.com/sebadob/rauthy) is a lightweight, self-hosted OpenID Connect provider with passkey support, MFA, SCIM and an admin UI. NetBird connects to it with the **Generic OIDC** connector.
+
+<Note>
+Use Rauthy v0.37.1 or newer. Earlier versions do not put the `name` claim in the ID token, and the Generic OIDC login then fails with `missing "name" claim`.
+</Note>
+
+## Management Setup (Recommended)
+
+### Prerequisites
+
+- NetBird self-hosted with embedded IdP enabled
+- Rauthy v0.37.1 or newer, with access to its Admin UI
+
+### Step 1: Create a Client in Rauthy
+
+1. Open the Rauthy Admin UI (`https://rauthy.example.com/auth/v1/admin`)
+2. Go to **Clients** and add a new client:
+   - **Client ID**: `netbird`
+   - **Client Name**: `NetBird`
+   - **Confidential**: On
+   - **Redirect URIs**: `https://netbird.example.com/oauth2/callback` (replace `netbird.example.com` with your NetBird domain)
+   - *(Optional)* **Post Logout Redirect URIs**: `https://netbird.example.com/oauth2/logout/callback`, so logout redirects back to NetBird
+3. Save the client
+4. Open the new client and copy its **Client Secret**
+
+Rauthy's defaults for a new client work with NetBird: the `authorization_code` flow, S256 PKCE, and the `openid`, `profile` and `email` scopes.
+
+### Step 2: Add Identity Provider in NetBird
+
+1. Log in to your NetBird Dashboard
+2. Navigate to **Settings** → **Identity Providers**
+3. Click **Add Identity Provider**
+4. Fill in the fields:
+
+| Field | Value |
+|-------|-------|
+| Type | Generic OIDC |
+| Name | Rauthy (or your preferred display name) |
+| Client ID | `netbird` |
+| Client Secret | From Rauthy |
+| Issuer | `https://rauthy.example.com/auth/v1` |
+
+<Note>
+Rauthy's issuer includes the `/auth/v1` path. It must match the `issuer` value from `https://rauthy.example.com/auth/v1/.well-known/openid-configuration` exactly.
+</Note>
+
+5. Click **Save**
+
+### Step 3: Check the Redirect URI
+
+After saving, NetBird displays the **Redirect URL**. Make sure it matches the redirect URI you set on the Rauthy client in Step 1. If it does not, add the displayed URL to the client's **Redirect URIs** in Rauthy.
+
+### Step 4: Test the Connection
+
+1. Log out of NetBird Dashboard
+2. On the login page, you should see a "Rauthy" button
+3. Click it and authenticate with your Rauthy account
+4. You should be redirected back to NetBird and logged in
+
+### Restricting Access
+
+To allow only some Rauthy users to log in to NetBird, set a **Login Group Prefix** on the client in Rauthy, for example `netbird`. Only users in a group that matches the prefix can then log in.
+
+## Configuring JWT 'groups' Claim
+
+The Generic OIDC connector does not request the `groups` scope, so Rauthy only includes the `groups` claim if the scope is a default scope of the client:
+
+1. In the Rauthy Admin UI, open the `netbird` client
+2. Add `groups` to the client's **Default Scopes**
+3. Save the client
+
+Then enable JWT group sync in NetBird:
+
+1. In NetBird Dashboard, go to **Settings** → **Groups**
+2. Enable **JWT group sync**
+3. Set **JWT claim** to `groups`
+4. Optionally configure **JWT allow groups** to restrict access to users in specific Rauthy groups
+
+## Related Resources
+
+- [Generic OIDC](/selfhosted/identity-providers/generic-oidc)
+- [Rauthy documentation](https://sebadob.github.io/rauthy/)

@@ -830,6 +830,10 @@ export const docsNavigation = [
                                         href: '/selfhosted/identity-providers/pocketid',
                                     },
                                     {
+                                        title: 'Rauthy',
+                                        href: '/selfhosted/identity-providers/rauthy',
+                                    },
+                                    {
                                         title: 'AD FS',
                                         href: '/selfhosted/identity-providers/adfs',
                                     },
