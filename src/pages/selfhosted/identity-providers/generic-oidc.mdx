@@ -207,12 +207,12 @@ Groups created via JWT sync are managed by your IdP. Users are added/removed fro
 
 ### Claims in ID Token vs UserInfo
 
-Some providers only include basic claims in the ID token and require a UserInfo request for `email` and `name`. NetBird's embedded DEX connector automatically fetches UserInfo when configured with `getUserInfo: true` (the default for generic OIDC connectors).
+Some providers only include basic claims in the ID token and return `email` and `name` from the UserInfo endpoint. NetBird's embedded Dex connector fetches UserInfo only when the connector has `getUserInfo: true`. Generic OIDC connectors added in the Dashboard do not set it, so they read claims from the ID token only. The Zitadel connector type sets it.
 
-If users appear without email or name:
-1. Check if your IdP includes these claims in the ID token
-2. Verify the UserInfo endpoint is accessible
-3. Ensure the `profile` and `email` scopes are granted
+If login fails with `missing "name" claim`, or users appear without email or name:
+1. Check if your IdP includes these claims in the ID token, and configure it to do so if it can
+2. Ensure the `profile` and `email` scopes are granted
+3. If your IdP returns these claims only from UserInfo, define the connector in `EmbeddedIdP.StaticConnectors` in `management.json` instead of the Dashboard, with `"getUserInfo": true` in its `config`
 
 ### Issuer URL Format
 
